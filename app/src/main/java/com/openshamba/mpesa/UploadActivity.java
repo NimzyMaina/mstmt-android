@@ -37,6 +37,12 @@ public class UploadActivity extends BaseActivity {
     private int PICK_IMAGE_FROM_GALLARY_REQUEST =1;
 
     EditText id;
+    EditText phone;
+    EditText amount;
+    EditText desc;
+
+    Button uploadBtn;
+    Button stk;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +56,14 @@ public class UploadActivity extends BaseActivity {
                     MY_PERMISSION_REQUEST);
         }
 
-        Button uploadBtn = (Button) findViewById(R.id.button2);
+        uploadBtn = (Button) findViewById(R.id.button2);
+        stk = (Button) findViewById(R.id.button3);
+
         id = (EditText) findViewById(R.id.idNumber);
+
+        phone = (EditText) findViewById(R.id.phoneNumber);
+        amount = (EditText) findViewById(R.id.amount);
+        desc = (EditText) findViewById(R.id.description);
 
         uploadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,6 +80,54 @@ public class UploadActivity extends BaseActivity {
                         Intent.createChooser(intent,"Select Mpesa Statement"),
                         PICK_IMAGE_FROM_GALLARY_REQUEST
                 );
+            }
+        });
+
+        stk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(phone.getText().toString().isEmpty()){
+                    showSnackBar("Please enter your phone number","error");
+                    return;
+                }
+
+                if(amount.getText().toString().isEmpty()){
+                    showSnackBar("Please enter amount","error");
+                    return;
+                }
+
+                if(desc.getText().toString().isEmpty()){
+                    showSnackBar("Please enter the transaction description","error");
+                    return;
+                }
+
+                Call<ApiResponse> call = ServiceGenerator.getClient(session.getKeyApiKey()).stk(
+                        phone.getText().toString().trim(),
+                        Integer.parseInt(amount.getText().toString()),
+                        desc.getText().toString().trim()
+                );
+
+                showpDialog();
+                call.enqueue(new Callback<ApiResponse>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                        hidepDialog();
+                        if(response.isSuccessful()){
+                            showSnackBar(response.body().getMessage(),"success");
+                            desc.setText("");
+                            amount.setText("0");
+                        }else{
+                            ApiResponse error = ErrorHandler.parseError(response);
+                            showSnackBar(error.getMessage(),"error");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse> call, Throwable t) {
+                        hidepDialog();
+                        showSnackBar("Please check your internet connection.","error");
+                    }
+                });
             }
         });
 
