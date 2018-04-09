@@ -31,6 +31,7 @@ public class MainActivity extends BaseActivity {
 
         if(session.isLoggedIn()){
            startActivity(new Intent(MainActivity.this,UploadActivity.class));
+           finish();
         }
 
 //        try {
